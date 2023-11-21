@@ -1,42 +1,63 @@
 package com.myapp.myapp.controllers;
 
-import com.myapp.myapp.dao.UserDao;
 import com.myapp.myapp.models.User;
+import com.myapp.myapp.services.UserServices;
+import com.myapp.myapp.utils.JWTUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("user")
 public class UserController {
 
     @Autowired
-    UserDao userDao;
+    UserServices userServices;
+    @Autowired
+    JWTUtil jwtUtil;
 
     @RequestMapping(value = "/", method = RequestMethod.GET)
-    List<User> getAll(){
-        return userDao.getAll();
+    public List<User> getAll() {
+        return userServices.getAll();
     }
+
     @RequestMapping(value = "/{id}", method = RequestMethod.GET)
-    User getUser(@PathVariable long id){
-        return userDao.getUser(id);
+    public User getUser(@PathVariable long id) {
+        return userServices.getUser(id);
     }
 
     @RequestMapping(value = "/", method = RequestMethod.POST)
-    User createUser(@RequestBody User user){
-        userDao.createUser(user);
-        return user;
+    public void createUser(@RequestBody User user) {
+        userServices.createUser(user);
     }
 
     @RequestMapping(value = "/{id}", method = RequestMethod.PUT)
-    void updateUser(@RequestBody User user){
-        userDao.updateUser(user);
+    public void updateUser(@RequestBody User user) {
+        userServices.updateUser(user);
     }
 
     @RequestMapping(value = "/{id}", method = RequestMethod.DELETE)
-    void deleteUser(@PathVariable long id){
-        userDao.deleteUser(id);
+    public void deleteUser(@PathVariable long id) {
+        userServices.deleteUser(id);
+    }
+
+    @RequestMapping(value = "/login", method = RequestMethod.POST)
+    Map<String, Object> login(@RequestBody User dto) {
+        //ok
+        User user = userServices.login(dto);
+
+        Map<String, Object> result = new HashMap<>();
+        if (user != null) {
+            String token = jwtUtil.createJWT(String.valueOf(user.getId()), user.getEmail());
+
+            result.put("token", token);
+            result.put("user", user);
+        }
+
+        return result;
     }
 
 }
